@@ -1,36 +1,25 @@
-import { getLocalStorage, setLocalStorage } from './utils.mjs';
 import ProductData from './ProductData.mjs';
+import { getParam } from './utils.mjs';
+import ProductDetails from './ProductDetails.mjs';
 
 const dataSource = new ProductData('tents');
+const productId = getParam('product')
 
-function addProductToCart(product) {
-  let cart = getLocalStorage('so-cart');
+const product = new ProductDetails(productId,dataSource);
+product.init();
 
-  // Convert anything non-array to a true array
-  if (Array.isArray(cart)) {
-    // ok
-  } else if (cart && typeof cart === 'object') {
-    // handles previously-saved object or array-like { "0": {...}, "1": {...} }
-    cart = Object.values(cart);
-  } else {
-    cart = [];
-  }
+//async function addToCartHandler(e) {
+ // e?.preventDefault?.();
+ // const id = e?.target?.dataset?.id;
+ // if (!id) return console.warn('Missing data-id on Add to Cart button');
 
-  cart.push(product);
-  setLocalStorage('so-cart', cart);
-}
+//   const product = await dataSource.findProductById(id);
+//  if (!product) return console.warn('No product found for id:', id);
 
-async function addToCartHandler(e) {
-  e?.preventDefault?.();
-  const id = e?.target?.dataset?.id;
-  if (!id) return console.warn('Missing data-id on Add to Cart button');
+//   addProductToCart(product);
+// }
 
-  const product = await dataSource.findProductById(id);
-  if (!product) return console.warn('No product found for id:', id);
+// document
+ //  .getElementById('addToCart')
+ //  ?.addEventListener('click', addToCartHandler);
 
-  addProductToCart(product);
-}
-
-document
-  .getElementById('addToCart')
-  ?.addEventListener('click', addToCartHandler);
