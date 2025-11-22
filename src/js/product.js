@@ -1,4 +1,7 @@
-import { getLocalStorage, setLocalStorage } from './utils.mjs';
+// src/js/product.js
+import { getLocalStorage, setLocalStorage, loadHeaderFooter } from './utils.mjs';
+
+
 import ProductData from './ProductData.mjs';
 
 const dataSource = new ProductData('tents');
@@ -37,3 +40,5 @@ async function addToCartHandler(e) {
 document
   .getElementById('addToCart')
   .addEventListener('click', addToCartHandler);
+
+  loadHeaderFooter();
