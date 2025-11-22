@@ -3,58 +3,74 @@ import { setLocalStorage, getLocalStorage } from './utils.mjs';
 export default class ProductDetails {
   constructor(productId, dataSource) {
     this.productId = productId;
-    this.product = {};
+    this.product = null;
     this.dataSource = dataSource;
   }
 
   async init() {
-    
-    this.product = await this.dataSource.findProductById(this.productId);
-
-    
-    this.renderProductDetails();
-
-    
-    document
-      .getElementById('addToCart')
-      .addEventListener('click', this.addProductToCart.bind(this));
+    try {
+      this.product = await this.dataSource.findProductById(this.productId);
+      this.renderProductDetails();
+    } catch (err) {
+      console.error('Error loading product details', err);
+    }
   }
 
-  addProductToCart() {
-    let cart = getLocalStorage('so-cart');
-
-    // Ensure we always end up with a proper array
-    if (Array.isArray(cart)) {
-      // OK
-    } else if (cart && typeof cart === 'object') {
-      
-      cart = Object.values(cart);
-    } else {
-      cart = [];
-    }
-
+  addToCart() {
+    const key = 'so-cart';
+    const cart = getLocalStorage(key) || [];
     cart.push(this.product);
-    setLocalStorage('so-cart', cart);
+    setLocalStorage(key, cart);
   }
 
   renderProductDetails() {
+    if (!this.product) return;
     const product = this.product;
 
-    document.querySelector('h2').textContent = product.Brand.Name;
-    document.querySelector('h3').textContent = product.NameWithoutBrand;
+    // Update page title
+    if (product.Name) {
+      document.title = `Sleep Outside | ${product.Name}`;
+    }
 
-    const productImage = document.getElementById('productImage');
-    productImage.src = product.Image;
-    productImage.alt = product.NameWithoutBrand;
+    const nameElement = document.getElementById('productName');
+    if (nameElement) {
+      nameElement.textContent = product.NameWithoutBrand || product.Name || '';
+    }
 
-    document.getElementById('productPrice').textContent = product.FinalPrice;
+    const imageElement = document.getElementById('productImage');
+    if (imageElement) {
+      const images = product.Images || {};
+      imageElement.src =
+        images.PrimaryLarge || images.PrimaryMedium || product.Image || '';
+      imageElement.alt =
+        product.NameWithoutBrand || product.Name || 'Camping product';
+    }
 
-    document.getElementById('productColor').textContent =
-      product.Colors?.[0]?.ColorName ?? 'N/A';
+    const priceElement = document.getElementById('productPrice');
+    if (priceElement) {
+      const value = product.FinalPrice;
+      const formatted =
+        typeof value === 'number' ? value.toFixed(2) : value || '';
+      priceElement.textContent = `$${formatted}`;
+    }
 
-    document.getElementById('productDescription').innerHTML =
-      product.DescriptionHtmlSimple;
+    const colorElement = document.getElementById('productColor');
+    if (colorElement) {
+      colorElement.textContent =
+        product.Colors && product.Colors.length > 0
+          ? product.Colors[0].ColorName
+          : 'N/A';
+    }
 
-    document.getElementById('addToCart').dataset.id = product.id;
+    const descriptionElement = document.getElementById('productDescription');
+    if (descriptionElement) {
+      descriptionElement.innerHTML = product.DescriptionHtmlSimple || '';
+    }
+
+    const addToCartButton = document.getElementById('addToCart');
+    if (addToCartButton) {
+      addToCartButton.dataset.id = product.Id;
+      addToCartButton.addEventListener('click', () => this.addToCart());
+    }
   }
 }
