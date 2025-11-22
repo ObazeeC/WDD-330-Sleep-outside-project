@@ -22,7 +22,8 @@ function cartItemTemplate(item) {
   <p class='cart-card__price'>$${item.FinalPrice}</p>
 </li>`;
 
-  return newItem;
-}
+const productsCartList = new ProductsBought(dataSource, cartListElement);
 
-renderCartContents();
+productsCartList.init();
+
+loadHeaderFooter();

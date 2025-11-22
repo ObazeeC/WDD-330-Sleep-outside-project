@@ -27,4 +27,6 @@ export default defineConfig({
       },
     },
   },
+  // 👇 mueve la base al final, y usa una barra absoluta
+  base: "/", 
 });
