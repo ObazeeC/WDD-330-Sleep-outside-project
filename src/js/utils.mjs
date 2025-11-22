@@ -21,3 +21,9 @@ export function setClick(selector, callback) {
   });
   qs(selector).addEventListener('click', callback);
 }
+// Get a query string parameter by name: ?category=tents
+export function getParam(param) {
+  const query = new URLSearchParams(window.location.search);
+  return query.get(param);
+}
+
