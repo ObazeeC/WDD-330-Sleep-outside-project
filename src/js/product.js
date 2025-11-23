@@ -1,39 +1,19 @@
-import { getLocalStorage, setLocalStorage } from './utils.mjs';
-import ProductData from './ProductData.mjs';
+import ExternalServices from "./ExternalServices.mjs";
+import ProductDetails from "./ProductDetails.mjs";
+import { loadHeaderFooter, getParam } from "./utils.mjs";
 
-const dataSource = new ProductData('tents');
+// load header and footer
+loadHeaderFooter();
 
-/*
-To actually add products to a cart, you’ll want to:
+// get the product id from the query string (?product=XXXX)
+const productId = getParam("product");
 
-Retrieve the existing cart from localStorage.
+// set up our data source and details manager
+const dataSource = new ExternalServices();
+const element = document.querySelector(".product-detail");
 
-Parse it into an array (if it exists).
+// ProductDetails will handle rendering the product information
+const product = new ProductDetails(productId, dataSource, element);
 
-Add the new product to that array.
-
-Save the updated array back into localStorage.
-
-*/
-function addProductToCart(product) {
-  // retrieve the existing cart from local storage and parse it into an array if it already exist or create a new array
-  //const cart = JSON.parse(localStorage.getItem('so-cart')) || [];  // We use the JSON.parse when retrieving from local storage
-  const cart = getLocalStorage('so-cart') || [];
-
-  // Add new product
-  cart.push(product);
-
-  // Save the updated cart back to localStorage
-  //localStorage.setItem('so-cart', JSON.stringify(cart)); // Local storage only stores strings, so we need the JSON.stringify method when saving
-  setLocalStorage('so-cart', cart);
-}
-// add to cart button event handler
-async function addToCartHandler(e) {
-  const product = await dataSource.findProductById(e.target.dataset.id);
-  addProductToCart(product);
-}
-
-// add listener to Add to Cart button
-document
-  .getElementById('addToCart')
-  .addEventListener('click', addToCartHandler);
+// initialize the product detail page
+product.init();
