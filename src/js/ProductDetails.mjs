@@ -1,4 +1,8 @@
-import { getLocalStorage, setLocalStorage } from "./utils.mjs";
+// src/js/ProductDetails.mjs
+import ExternalServices from "./ExternalServices.mjs";
+import { getLocalStorage, setLocalStorage, alertMessage } from "./utils.mjs";
+
+const cartKey = "so-cart";
 
 export default class ProductDetails {
   constructor(productId, dataSource, element) {
@@ -9,65 +13,65 @@ export default class ProductDetails {
   }
 
   async init() {
-    // get the product data from the server
+    // 1. get product from API
     this.product = await this.dataSource.findProductById(this.productId);
 
-    if (!this.product) return;
-
-    // render details to the page
+    // 2. render it
     this.renderProductDetails();
 
-    // wire up the Add to Cart button
+    // 3. hook up add-to-cart button
     const addToCartButton = document.querySelector("#add-to-cart");
-    addToCartButton.dataset.id = this.product.Id;
-    addToCartButton.addEventListener("click", () => this.addToCart());
+    if (addToCartButton) {
+      addToCartButton.addEventListener("click", () => this.addToCart());
+    }
   }
 
   renderProductDetails() {
     const p = this.product;
 
-    // BRAND: sometimes an object. Safely convert to a string.
+    // BRAND: sometimes an object, sometimes a string
     let brandText = "";
     if (p.Brand) {
-      // if Brand has a Name property, use it; otherwise fall back to string
-      brandText = p.Brand.Name ?? String(p.Brand);
+      if (typeof p.Brand === "string") {
+        brandText = p.Brand;
+      } else if (typeof p.Brand.Name === "string") {
+        brandText = p.Brand.Name;
+      }
+    } else if (p.BrandName) {
+      brandText = p.BrandName;
     }
 
-    document.querySelector("#p-brand").textContent = brandText;
-
-    // NAME
-    document.querySelector("#p-name").textContent =
-      p.NameWithoutBrand ?? p.Name ?? "";
-
-    // COLOR: to avoid [object Object], keep it simple / optional
+    // COLOR: first color name, if it exists
     let colorText = "";
-    if (Array.isArray(p.Colors)) {
-      colorText = p.Colors
-        .map((c) => c.ColorName ?? String(c))
-        .join(", ");
-    } else if (p.Colors) {
-      colorText = String(p.Colors);
+    if (p.Colors && p.Colors.length > 0) {
+      colorText = p.Colors[0].ColorName || "";
     }
+
+    document.querySelector("#p-brand").textContent = brandText || p.NameWithoutBrand;
+    document.querySelector("#p-name").textContent = p.NameWithoutBrand;
     document.querySelector("#p-color").textContent = colorText;
-
-    // DESCRIPTION: this is HTML, so we use innerHTML instead of textContent
-    const description =
-      p.DescriptionHtmlSimple ?? p.Description ?? "";
-    document.querySelector("#p-description").innerHTML = description;
-
-    // PRICE
+    document.querySelector("#p-description").innerHTML = p.DescriptionHtmlSimple;
     document.querySelector("#p-price").textContent = `$${p.FinalPrice}`;
-
-    // IMAGE
     const img = document.querySelector("#p-image");
     img.src = p.Images.PrimaryMedium;
     img.alt = p.Name;
   }
 
   addToCart() {
-    const cartKey = "so-cart";
+    // read current cart
     const currentCart = getLocalStorage(cartKey) || [];
-    currentCart.push(this.product);
+
+    // push a *copy* with Quantity = 1
+    const productToStore = { ...this.product, Quantity: 1 };
+    currentCart.push(productToStore);
+
+    // save back to LS
     setLocalStorage(cartKey, currentCart);
+
+    // quick dev check
+    console.log("Cart now has", currentCart.length, "items");
+
+    // show alert
+    alertMessage("Item added to cart!", false);
   }
 }
